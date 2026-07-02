@@ -32,7 +32,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Tag } from "lucide-react";
+import { Plus, Pencil, Trash2, Tag, Search } from "lucide-react";
 import { toast } from "sonner";
 
 interface Category {
@@ -44,6 +44,7 @@ interface Category {
 
 export default function CategoriesPage() {
   const [categories, setCategories] = React.useState<Category[]>([]);
+  const [search, setSearch] = React.useState("");
   const [loading, setLoading] = React.useState(true);
   const [formOpen, setFormOpen] = React.useState(false);
   const [editCategory, setEditCategory] = React.useState<Category | null>(null);
@@ -67,6 +68,12 @@ export default function CategoriesPage() {
   React.useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const filteredCategories = React.useMemo(() => {
+    if (!search) return categories;
+    const q = search.toLowerCase();
+    return categories.filter((c) => c.name.toLowerCase().includes(q));
+  }, [categories, search]);
 
   React.useEffect(() => {
     if (editCategory) {
@@ -142,16 +149,28 @@ export default function CategoriesPage() {
         </Button>
       </div>
 
+      <div className="flex items-center gap-4">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Cari kategori..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+      </div>
+
       <Card>
         <CardHeader>
-          <CardTitle>Semua Kategori ({categories.length})</CardTitle>
+          <CardTitle>Semua Kategori ({filteredCategories.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
+              {loading ? (
             <p className="text-sm text-muted-foreground text-center py-8">Memuat...</p>
-          ) : categories.length === 0 ? (
+          ) : filteredCategories.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
-              Belum ada kategori. Klik &quot;Tambah Kategori&quot; untuk membuat.
+              {search ? "Tidak ada kategori yang cocok" : "Belum ada kategori. Klik &quot;Tambah Kategori&quot; untuk membuat."}
             </p>
           ) : (
             <div className="overflow-x-auto">
@@ -164,7 +183,7 @@ export default function CategoriesPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {categories.map((category) => (
+                  {filteredCategories.map((category) => (
                     <TableRow key={category.id}>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">

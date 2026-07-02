@@ -4,6 +4,12 @@ import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Table,
   TableBody,
@@ -34,6 +40,7 @@ import {
   Users,
   Package,
   Receipt,
+  CalendarIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store-context";
@@ -99,11 +106,23 @@ export default function ReportsPage() {
   const [data, setData] = React.useState<ReportData | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [period, setPeriod] = React.useState("today");
+  const [customRange, setCustomRange] = React.useState(false);
+  const [dateFrom, setDateFrom] = React.useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = React.useState<Date | undefined>(undefined);
 
   const fetchReport = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/reports?period=${period}${currentStoreId ? `&storeId=${currentStoreId}` : ""}`);
+      let url = `/api/reports?`;
+      if (customRange && dateFrom && dateTo) {
+        const fromStr = dateFrom.toISOString().split("T")[0];
+        const toStr = dateTo.toISOString().split("T")[0];
+        url += `dateFrom=${fromStr}&dateTo=${toStr}`;
+      } else {
+        url += `period=${period}`;
+      }
+      if (currentStoreId) url += `&storeId=${currentStoreId}`;
+      const res = await fetch(url);
       const reportData = await res.json();
       setData(reportData);
     } catch {
@@ -115,7 +134,7 @@ export default function ReportsPage() {
 
   React.useEffect(() => {
     fetchReport();
-  }, [period, currentStoreId]);
+  }, [period, currentStoreId, customRange, dateFrom, dateTo]);
 
   const paymentData = data
     ? Object.entries(data.paymentMethods).map(([method, amount]) => ({
@@ -138,22 +157,71 @@ export default function ReportsPage() {
           <h1 className="text-2xl font-bold">Laporan</h1>
           <p className="text-muted-foreground">Ringkasan penjualan dan analisis bisnis</p>
         </div>
-        <div className="flex gap-2">
-          {[
-            { value: "today", label: "Hari Ini" },
-            { value: "week", label: "Minggu Ini" },
-            { value: "month", label: "Bulan Ini" },
-            { value: "year", label: "Tahun Ini" },
-          ].map((p) => (
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex gap-2">
+            {[
+              { value: "today", label: "Hari Ini" },
+              { value: "week", label: "Minggu Ini" },
+              { value: "month", label: "Bulan Ini" },
+              { value: "year", label: "Tahun Ini" },
+            ].map((p) => (
+              <Button
+                key={p.value}
+                variant={period === p.value && !customRange ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  setPeriod(p.value);
+                  setCustomRange(false);
+                }}
+              >
+                {p.label}
+              </Button>
+            ))}
+          </div>
+          <div className="flex gap-2">
             <Button
-              key={p.value}
-              variant={period === p.value ? "default" : "outline"}
+              variant={customRange ? "default" : "outline"}
               size="sm"
-              onClick={() => setPeriod(p.value)}
+              onClick={() => setCustomRange(!customRange)}
             >
-              {p.label}
+              <CalendarIcon className="mr-1 h-4 w-4" />
+              Custom
             </Button>
-          ))}
+            {customRange && (
+              <>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      {dateFrom ? dateFrom.toLocaleDateString("id-ID") : "Dari"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={dateFrom}
+                      onSelect={setDateFrom}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      {dateTo ? dateTo.toLocaleDateString("id-ID") : "Sampai"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={dateTo}
+                      onSelect={setDateTo}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </>
+            )}
+          </div>
         </div>
       </div>
 

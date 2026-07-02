@@ -294,13 +294,137 @@ async function main() {
     where: { organizationId: org.id, email: "budi@example.com" },
   });
 
-  if (!existingCustomer) {
-    await prisma.customer.create({
+  const customer1 = existingCustomer || await prisma.customer.create({
+    data: {
+      organizationId: org.id,
+      name: "Budi Santoso",
+      phone: "0812-3456-7890",
+      email: "budi@example.com",
+    },
+  });
+
+  const customers = [customer1];
+
+  const customerData = [
+    { name: "Ani Wijaya", phone: "0813-1234-5678", email: "ani@example.com" },
+    { name: "Citra Dewi", phone: "0815-9876-5432", email: "citra@example.com" },
+    { name: "Dedi Kurniawan", phone: "0816-5555-1234", email: "dedi@example.com" },
+    { name: "Eka Putri", phone: "0817-6666-7890", email: "eka@example.com" },
+    { name: "Fajar Nugroho", phone: "0818-7777-3456", email: "fajar@example.com" },
+  ];
+
+  for (const cd of customerData) {
+    const existing = await prisma.customer.findFirst({
+      where: { organizationId: org.id, email: cd.email },
+    });
+    if (!existing) {
+      const c = await prisma.customer.create({
+        data: { organizationId: org.id, ...cd },
+      });
+      customers.push(c);
+    }
+  }
+
+  // Fetch all products for generating orders
+  const allProducts = await prisma.product.findMany({
+    where: { organizationId: org.id, isActive: true },
+  });
+
+  const paymentMethods = ["CASH", "CARD", "EWALLET", "QRIS", "TRANSFER"] as const;
+  const statuses = ["COMPLETED", "COMPLETED", "COMPLETED", "COMPLETED", "VOIDED"] as const;
+
+  // Generate 80 dummy transactions over the past 30 days
+  const now = new Date();
+  const storeUsers = [
+    { store: mainStore, user },
+    { store: branchStore, user },
+    { store: mainStore, user: cashier },
+  ];
+
+  console.log(`Creating 80 dummy transactions...`);
+
+  for (let i = 0; i < 80; i++) {
+    const daysAgo = randomInt(0, 30);
+    const hoursAgo = randomInt(8, 22);
+    const minutesAgo = randomInt(0, 59);
+    const orderDate = new Date(now);
+    orderDate.setDate(orderDate.getDate() - daysAgo);
+    orderDate.setHours(hoursAgo, minutesAgo, 0, 0);
+
+    const { store, user: orderUser } = storeUsers[randomInt(0, storeUsers.length - 1)];
+    const customer = Math.random() > 0.3 ? customers[randomInt(0, customers.length - 1)] : null;
+    const numItems = randomInt(1, 5);
+
+    let subtotal = 0;
+    const orderItems: {
+      productId: string;
+      productName: string;
+      quantity: number;
+      unitPrice: number;
+      total: number;
+    }[] = [];
+
+    const usedProductIds = new Set<string>();
+    for (let j = 0; j < numItems; j++) {
+      const product = allProducts[randomInt(0, allProducts.length - 1)];
+      if (usedProductIds.has(product.id)) continue;
+      usedProductIds.add(product.id);
+
+      const qty = randomInt(1, 5);
+      const unitPrice = Number(product.price);
+      const itemTotal = unitPrice * qty;
+      subtotal += itemTotal;
+
+      orderItems.push({
+        productId: product.id,
+        productName: product.name,
+        quantity: qty,
+        unitPrice,
+        total: itemTotal,
+      });
+    }
+
+    if (orderItems.length === 0) continue;
+
+    const taxRate = Number(store.taxRate) / 100;
+    const taxAmount = Math.round(subtotal * taxRate);
+    const total = subtotal + taxAmount;
+    const status = statuses[randomInt(0, statuses.length - 1)];
+    const paymentMethod = paymentMethods[randomInt(0, paymentMethods.length - 1)];
+
+    const orderNumber = `INV-${orderDate.getFullYear()}${String(orderDate.getMonth() + 1).padStart(2, "0")}${String(orderDate.getDate()).padStart(2, "0")}-${String(orderDate.getHours()).padStart(2, "0")}${String(orderDate.getMinutes()).padStart(2, "0")}${String(orderDate.getSeconds()).padStart(2, "0")}-${String(i + 1).padStart(3, "0")}`;
+
+    await prisma.order.create({
       data: {
-        organizationId: org.id,
-        name: "Budi Santoso",
-        phone: "0812-3456-7890",
-        email: "budi@example.com",
+        orderNumber,
+        storeId: store.id,
+        customerId: customer?.id || null,
+        userId: orderUser.id,
+        subtotal,
+        taxAmount,
+        discountAmount: 0,
+        total,
+        status,
+        notes: null,
+        createdAt: orderDate,
+        updatedAt: orderDate,
+        items: {
+          create: orderItems.map((item) => ({
+            productId: item.productId,
+            productName: item.productName,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            discountAmount: 0,
+            total: item.total,
+          })),
+        },
+        payments: {
+          create: {
+            method: paymentMethod,
+            amount: total,
+            reference: paymentMethod === "CASH" ? null : `REF-${Date.now()}-${i}`,
+          },
+        },
       },
     });
   }
@@ -314,6 +438,8 @@ async function main() {
   console.log(`  ─────────────────────────────────────`);
   console.log(`  Products     : ${productData.length} items`);
   console.log(`  Categories   : ${categories.length} categories`);
+  console.log(`  Customers    : ${customers.length} customers`);
+  console.log(`  Transactions : 80 dummy orders`);
 }
 
 main()

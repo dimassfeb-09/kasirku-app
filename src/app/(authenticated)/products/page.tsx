@@ -7,6 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -62,6 +69,7 @@ export default function ProductsPage() {
   const [products, setProducts] = React.useState<Product[]>([]);
   const [categories, setCategories] = React.useState<Category[]>([]);
   const [search, setSearch] = React.useState("");
+  const [categoryIdFilter, setCategoryIdFilter] = React.useState("all");
   const [loading, setLoading] = React.useState(true);
   const [formOpen, setFormOpen] = React.useState(false);
   const [editProduct, setEditProduct] = React.useState<Product | null>(null);
@@ -89,8 +97,9 @@ export default function ProductsPage() {
       // CASHIER: fetch products filtered by current store
       const isAdminRole = userRole === "OWNER" || userRole === "MANAGER";
       const storeParam = isAdminRole ? "" : (currentStoreId ? `&storeId=${currentStoreId}` : "");
+      const categoryParam = categoryIdFilter && categoryIdFilter !== "all" ? `&categoryId=${categoryIdFilter}` : "";
       const [productsRes, categoriesRes] = await Promise.all([
-        fetch(`/api/products?search=${encodeURIComponent(search)}${storeParam}`),
+        fetch(`/api/products?search=${encodeURIComponent(search)}${storeParam}${categoryParam}`),
         fetch("/api/categories"),
       ]);
       const [productsData, categoriesData] = await Promise.all([
@@ -104,7 +113,7 @@ export default function ProductsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, currentStoreId, userRole]);
+  }, [search, categoryIdFilter, currentStoreId, userRole]);
 
   React.useEffect(() => {
     fetchData();
@@ -158,6 +167,19 @@ export default function ProductsPage() {
             className="pl-10"
           />
         </div>
+        <Select value={categoryIdFilter} onValueChange={setCategoryIdFilter}>
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue placeholder="Semua Kategori" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Kategori</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat.id} value={cat.id}>
+                {cat.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <Card>

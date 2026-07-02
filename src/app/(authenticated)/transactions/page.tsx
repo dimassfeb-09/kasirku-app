@@ -87,6 +87,7 @@ export default function TransactionsPage() {
   const [selectedOrder, setSelectedOrder] = React.useState<Order | null>(null);
   const [detailOpen, setDetailOpen] = React.useState(false);
   const [statusFilter, setStatusFilter] = React.useState("ALL");
+  const [paymentFilter, setPaymentFilter] = React.useState("ALL");
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -110,6 +111,9 @@ export default function TransactionsPage() {
     if (statusFilter !== "ALL") {
       result = result.filter((o) => o.status === statusFilter);
     }
+    if (paymentFilter !== "ALL") {
+      result = result.filter((o) => o.payments[0]?.method === paymentFilter);
+    }
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
@@ -120,7 +124,7 @@ export default function TransactionsPage() {
       );
     }
     return result;
-  }, [orders, searchQuery, statusFilter]);
+  }, [orders, searchQuery, statusFilter, paymentFilter]);
 
   const handleViewDetail = (order: Order) => {
     setSelectedOrder(order);
@@ -189,7 +193,7 @@ export default function TransactionsPage() {
         </Card>
       </div>
 
-      {/* Filter */}
+      {/* Filter Status */}
       <div className="flex gap-2 flex-wrap">
         {["ALL", "COMPLETED", "VOIDED", "REFUNDED"].map((status) => (
           <Button
@@ -199,6 +203,21 @@ export default function TransactionsPage() {
             onClick={() => setStatusFilter(status)}
           >
             {status === "ALL" ? "Semua" : statusBadge[status]?.label}
+          </Button>
+        ))}
+      </div>
+
+      {/* Filter Pembayaran */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-sm text-muted-foreground">Pembayaran:</span>
+        {["ALL", "CASH", "CARD", "EWALLET", "QRIS", "TRANSFER"].map((method) => (
+          <Button
+            key={method}
+            variant={paymentFilter === method ? "default" : "outline"}
+            size="sm"
+            onClick={() => setPaymentFilter(method)}
+          >
+            {method === "ALL" ? "Semua" : paymentMethodLabel[method] || method}
           </Button>
         ))}
       </div>

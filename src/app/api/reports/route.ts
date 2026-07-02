@@ -12,32 +12,42 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const storeId = searchParams.get("storeId");
   const period = searchParams.get("period") || "today";
+  const dateFrom = searchParams.get("dateFrom");
+  const dateTo = searchParams.get("dateTo");
 
   const now = new Date();
   let startDate: Date;
+  let endDate: Date;
 
-  switch (period) {
-    case "today":
-      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      break;
-    case "week": {
-      const day = now.getDay();
-      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day);
-      break;
+  if (dateFrom && dateTo) {
+    startDate = new Date(dateFrom);
+    endDate = new Date(dateTo);
+    endDate.setHours(23, 59, 59, 999);
+  } else {
+    endDate = now;
+    switch (period) {
+      case "today":
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        break;
+      case "week": {
+        const day = now.getDay();
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day);
+        break;
+      }
+      case "month":
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        break;
+      case "year":
+        startDate = new Date(now.getFullYear(), 0, 1);
+        break;
+      default:
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     }
-    case "month":
-      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-      break;
-    case "year":
-      startDate = new Date(now.getFullYear(), 0, 1);
-      break;
-    default:
-      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   }
 
   const where: any = {
     store: { organizationId: auth.ctx.session.organizationId },
-    createdAt: { gte: startDate },
+    createdAt: { gte: startDate, lte: endDate },
     status: "COMPLETED",
   };
 

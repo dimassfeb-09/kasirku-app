@@ -6,6 +6,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -64,6 +71,7 @@ export default function StaffPage() {
   const [stores, setStores] = React.useState<Store[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [storeFilter, setStoreFilter] = React.useState("all");
   const [formOpen, setFormOpen] = React.useState(false);
   const [editingUser, setEditingUser] = React.useState<User | null>(null);
   const [deleteUser, setDeleteUser] = React.useState<User | null>(null);
@@ -91,15 +99,23 @@ export default function StaffPage() {
   }, []);
 
   const filteredUsers = React.useMemo(() => {
-    if (!searchQuery) return users;
-    const q = searchQuery.toLowerCase();
-    return users.filter(
-      (u) =>
-        u.fullName.toLowerCase().includes(q) ||
-        u.email.toLowerCase().includes(q) ||
-        u.role.toLowerCase().includes(q)
-    );
-  }, [users, searchQuery]);
+    let result = users;
+    if (storeFilter !== "all") {
+      result = result.filter((u) =>
+        u.storeAssignments.some((a) => a.store.id === storeFilter)
+      );
+    }
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (u) =>
+          u.fullName.toLowerCase().includes(q) ||
+          u.email.toLowerCase().includes(q) ||
+          u.role.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [users, searchQuery, storeFilter]);
 
   const handleEdit = (user: User) => {
     setEditingUser(user);
@@ -156,6 +172,19 @@ export default function StaffPage() {
               className="pl-9 w-64"
             />
           </div>
+          <Select value={storeFilter} onValueChange={setStoreFilter}>
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue placeholder="Semua Toko" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Toko</SelectItem>
+              {stores.map((s) => (
+                <SelectItem key={s.id} value={s.id}>
+                  {s.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button onClick={handleCreate} className="gap-2">
             <Plus className="w-4 h-4" />
             Tambah Staff

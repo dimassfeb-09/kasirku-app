@@ -9,9 +9,10 @@ bun run lint         # ESLint
 bun run db:migrate   # Run Prisma migrations (also generates client)
 bun run db:seed      # Seed demo data
 bun run db:studio    # Open Prisma Studio
+bun run db:reset     # Reset database and re-run migrations
 ```
 
-No test framework is configured. There are no test scripts in package.json.
+Use `bun` (not npm/yarn/pnpm). No test framework is configured.
 
 ## Docker
 
@@ -34,10 +35,10 @@ POSTGRES_PASSWORD=secret JWT_SECRET=secret docker compose -f docker-compose.prod
 - **Database port is 5431**, not the default 5432 (see `.env`)
 - **Prisma client output** is in `src/generated/prisma` and is **gitignored** — run `bun run db:migrate` to regenerate after schema changes. Import from `@/generated/prisma`, never from `@prisma/client`.
 - **Prisma uses `PrismaPg` adapter** (`@prisma/adapter-pg`), not the default driver — see `src/lib/prisma.ts`
-- **Next.js 16** has breaking changes vs earlier versions — check `node_modules/next/dist/docs/` before writing new code
 - **Root layout** sets `export const dynamic = "force-dynamic"` — all pages are server-rendered at request time
 - **API error messages are in Indonesian** (e.g., "Email atau password salah", "Akses ditolak") — keep responses consistent
 - **Store context** is client-side via localStorage key `kasirku-current-store` — don't hardcode store IDs
+- **Seed credentials**: `admin@kasirku.app` / `password123` (OWNER), `cashier@kasirku.app` / `password123` (CASHIER)
 
 ## Architecture
 
@@ -91,7 +92,7 @@ export async function POST(request: Request) {
 | `src/lib/api-auth.ts` | `requireAuth()`, `requirePermission()` for API routes |
 | `src/lib/permissions.ts` | Role-based permission matrix |
 | `src/lib/store-context.tsx` | Client-side store selection (React context + localStorage) |
-| `src/lib/logger.ts` | Pino logger — use `logger.child({ module: "name" })` |
+| `src/lib/logger.ts` | Pino logger — use `createLogger({ module: "name" })` |
 
 ### UI stack
 

@@ -22,7 +22,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Store } from "lucide-react";
+import { Plus, Pencil, Trash2, Store, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { StoreForm } from "@/components/store-form";
 import { toast } from "sonner";
 
@@ -41,6 +42,7 @@ interface StoreData {
 
 export default function StoresPage() {
   const [stores, setStores] = React.useState<StoreData[]>([]);
+  const [search, setSearch] = React.useState("");
   const [loading, setLoading] = React.useState(true);
   const [formOpen, setFormOpen] = React.useState(false);
   const [editStore, setEditStore] = React.useState<StoreData | null>(null);
@@ -62,6 +64,16 @@ export default function StoresPage() {
   React.useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const filteredStores = React.useMemo(() => {
+    if (!search) return stores;
+    const q = search.toLowerCase();
+    return stores.filter(
+      (s) =>
+        s.name.toLowerCase().includes(q) ||
+        s.address?.toLowerCase().includes(q)
+    );
+  }, [stores, search]);
 
   const handleDelete = async () => {
     if (!deleteStore) return;
@@ -90,16 +102,28 @@ export default function StoresPage() {
         </Button>
       </div>
 
+      <div className="flex items-center gap-4">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Cari toko..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+      </div>
+
       <Card>
         <CardHeader>
-          <CardTitle>Semua Toko ({stores.length})</CardTitle>
+          <CardTitle>Semua Toko ({filteredStores.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
             <p className="text-sm text-muted-foreground text-center py-8">Memuat...</p>
-          ) : stores.length === 0 ? (
+          ) : filteredStores.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
-              Belum ada toko. Klik &quot;Tambah Toko&quot; untuk membuat.
+              {search ? "Tidak ada toko yang cocok" : "Belum ada toko. Klik &quot;Tambah Toko&quot; untuk membuat."}
             </p>
           ) : (
             <div className="overflow-x-auto">
@@ -116,7 +140,7 @@ export default function StoresPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {stores.map((store) => (
+                  {filteredStores.map((store) => (
                     <TableRow key={store.id}>
                       <TableCell className="font-medium">
                         <div className="flex items-center gap-2">
