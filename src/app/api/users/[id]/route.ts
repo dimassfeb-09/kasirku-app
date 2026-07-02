@@ -2,9 +2,6 @@ import { NextResponse } from "next/server";
 import { requireAuth, requirePermission } from "@/lib/api-auth";
 import { hashPassword } from "@/lib/auth";
 import { db } from "@/lib/prisma";
-import { logger } from "@/lib/logger";
-
-const log = logger.child({ module: "users" });
 
 export async function GET(
   request: Request,

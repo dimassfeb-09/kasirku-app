@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import Link from "next/link";
+import { Receipt, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -49,15 +50,19 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Kasirku</CardTitle>
+    <div className="relative flex min-h-screen items-center justify-center p-4">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+      <Card className="relative w-full max-w-sm shadow-lg">
+        <CardHeader className="items-center pb-2 pt-8">
+          <div className="mb-2 flex size-12 items-center justify-center rounded-xl bg-primary/10">
+            <Receipt className="size-6 text-primary" />
+          </div>
+          <CardTitle className="text-xl font-semibold tracking-tight">Kasirku</CardTitle>
           <CardDescription>Masuk ke akun POS Anda</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pb-8">
           <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
@@ -65,10 +70,11 @@ export default function LoginPage() {
                 placeholder="email@kasirku.app"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoFocus
                 required
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
@@ -80,12 +86,13 @@ export default function LoginPage() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Masuk..." : "Masuk"}
+              {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
+              {loading ? "Memproses..." : "Masuk"}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm text-muted-foreground">
+          <div className="mt-6 text-center text-xs text-muted-foreground">
             Belum punya akun?{" "}
-            <Link href="/register" className="text-primary underline">
+            <Link href="/register" className="font-medium text-primary hover:underline">
               Daftar
             </Link>
           </div>

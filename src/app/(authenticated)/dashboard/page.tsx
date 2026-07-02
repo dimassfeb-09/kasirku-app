@@ -3,17 +3,10 @@
 import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { DollarSign, ShoppingCart, Receipt, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store-context";
+import { formatRupiah, STATUS_BADGE } from "@/lib/utils";
 
 interface ReportSummary {
   totalOrders: number;
@@ -44,30 +37,7 @@ interface ReportData {
   recentOrders: RecentOrder[];
 }
 
-const formatRupiah = (amount: number) => {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-};
 
-const paymentMethodLabel: Record<string, string> = {
-  CASH: "Tunai",
-  CARD: "Kartu",
-  EWALLET: "E-Wallet",
-  QRIS: "QRIS",
-  TRANSFER: "Transfer",
-  OTHER: "Lainnya",
-};
-
-const statusBadge: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  COMPLETED: { label: "Selesai", variant: "default" },
-  VOIDED: { label: "Dibatalkan", variant: "destructive" },
-  REFUNDED: { label: "Dikembalikan", variant: "secondary" },
-  HELD: { label: "Tertahan", variant: "outline" },
-};
 
 export default function DashboardPage() {
   const { currentStoreId } = useStore();
@@ -178,10 +148,10 @@ export default function DashboardPage() {
                     <div className="text-right">
                       <p className="font-medium">{formatRupiah(order.total)}</p>
                       <Badge
-                        variant={statusBadge[order.status]?.variant || "default"}
+                        variant={STATUS_BADGE[order.status]?.variant || "default"}
                         className="text-[10px]"
                       >
-                        {statusBadge[order.status]?.label || order.status}
+                        {STATUS_BADGE[order.status]?.label || order.status}
                       </Badge>
                     </div>
                   </div>

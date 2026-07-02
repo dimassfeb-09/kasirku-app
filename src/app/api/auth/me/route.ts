@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/prisma";
-import { logger } from "@/lib/logger";
-
-const log = logger.child({ module: "auth", action: "me" });
 
 export async function GET() {
   const session = await getSession();

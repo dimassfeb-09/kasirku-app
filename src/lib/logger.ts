@@ -25,6 +25,4 @@ export const logger = pino({
   },
 });
 
-export function createLogger(context: Record<string, unknown>) {
-  return logger.child(context);
-}
+

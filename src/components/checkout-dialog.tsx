@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { formatRupiah } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -55,15 +56,6 @@ const paymentMethods = [
   { id: "QRIS", label: "QRIS", icon: QrCode, color: "bg-orange-500" },
   { id: "TRANSFER", label: "Transfer", icon: Landmark, color: "bg-indigo-500" },
 ];
-
-const formatRupiah = (amount: number) => {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-};
 
 const formatInputNumber = (value: string) => {
   const raw = value.replace(/\D/g, "");

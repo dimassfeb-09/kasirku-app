@@ -34,7 +34,6 @@ import {
 } from "recharts";
 import {
   TrendingUp,
-  TrendingDown,
   DollarSign,
   ShoppingCart,
   Users,
@@ -44,6 +43,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store-context";
+import { formatRupiah, PAYMENT_METHOD_LABEL, STATUS_BADGE } from "@/lib/utils";
 
 interface ReportData {
   summary: {
@@ -75,31 +75,11 @@ interface ReportData {
   }[];
 }
 
-const formatRupiah = (amount: number) => {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-};
 
-const paymentMethodLabel: Record<string, string> = {
-  CASH: "Tunai",
-  CARD: "Kartu",
-  EWALLET: "E-Wallet",
-  QRIS: "QRIS",
-  TRANSFER: "Transfer",
-  OTHER: "Lainnya",
-};
 
 const COLORS = ["#22c55e", "#3b82f6", "#a855f7", "#f97316", "#6366f1", "#ec4899"];
 
-const statusBadge: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  COMPLETED: { label: "Selesai", variant: "default" },
-  VOIDED: { label: "Dibatalkan", variant: "destructive" },
-  REFUNDED: { label: "Dikembalikan", variant: "secondary" },
-};
+
 
 export default function ReportsPage() {
   const { currentStoreId } = useStore();
@@ -138,7 +118,7 @@ export default function ReportsPage() {
 
   const paymentData = data
     ? Object.entries(data.paymentMethods).map(([method, amount]) => ({
-        name: paymentMethodLabel[method] || method,
+        name: PAYMENT_METHOD_LABEL[method] || method,
         value: amount,
       }))
     : [];
@@ -200,7 +180,6 @@ export default function ReportsPage() {
                       mode="single"
                       selected={dateFrom}
                       onSelect={setDateFrom}
-                      initialFocus
                     />
                   </PopoverContent>
                 </Popover>
@@ -215,7 +194,6 @@ export default function ReportsPage() {
                       mode="single"
                       selected={dateTo}
                       onSelect={setDateTo}
-                      initialFocus
                     />
                   </PopoverContent>
                 </Popover>
@@ -499,12 +477,12 @@ export default function ReportsPage() {
                       </TableCell>
                       <TableCell className="hidden md:table-cell">{order.staff}</TableCell>
                       <TableCell className="hidden sm:table-cell">
-                        <Badge variant="outline">{paymentMethodLabel[order.paymentMethod] || order.paymentMethod}</Badge>
+                        <Badge variant="outline">{PAYMENT_METHOD_LABEL[order.paymentMethod] || order.paymentMethod}</Badge>
                       </TableCell>
                       <TableCell className="text-right font-bold">{formatRupiah(order.total)}</TableCell>
                       <TableCell>
-                        <Badge variant={statusBadge[order.status]?.variant || "default"}>
-                          {statusBadge[order.status]?.label}
+                        <Badge variant={STATUS_BADGE[order.status]?.variant || "default"}>
+                          {STATUS_BADGE[order.status]?.label}
                         </Badge>
                       </TableCell>
                     </TableRow>

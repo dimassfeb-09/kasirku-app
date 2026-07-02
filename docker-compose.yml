@@ -4,7 +4,7 @@ services:
     container_name: kasirku-db
     restart: unless-stopped
     ports:
-      - "5431:5432"
+      - "5434:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -25,7 +25,7 @@ services:
     container_name: kasirku-app
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       DATABASE_URL: "postgresql://postgres:postgres@db:5432/postgres?schema=public"
       JWT_SECRET: "kasirku-dev-secret-key"

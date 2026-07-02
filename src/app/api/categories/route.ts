@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuth, requirePermission } from "@/lib/api-auth";
 import { db } from "@/lib/prisma";
-import { logger } from "@/lib/logger";
-
-const log = logger.child({ module: "categories" });
 
 export async function GET() {
   const auth = await requireAuth();

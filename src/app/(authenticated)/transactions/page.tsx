@@ -20,9 +20,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { Search, Eye, Filter, Receipt, ArrowLeft, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Search, Eye, Receipt, ArrowLeft, CheckCircle, XCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store-context";
+import { formatRupiah, PAYMENT_METHOD_LABEL, STATUS_BADGE } from "@/lib/utils";
 
 interface OrderItem {
   id: string;
@@ -54,29 +55,11 @@ interface Order {
   store: { name: string };
 }
 
-const formatRupiah = (amount: number) => {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-};
-
-const paymentMethodLabel: Record<string, string> = {
-  CASH: "Tunai",
-  CARD: "Kartu",
-  EWALLET: "E-Wallet",
-  QRIS: "QRIS",
-  TRANSFER: "Transfer",
-  OTHER: "Lainnya",
-};
-
 const statusBadge: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ReactNode }> = {
-  COMPLETED: { label: "Selesai", variant: "default", icon: <CheckCircle className="w-3 h-3" /> },
-  VOIDED: { label: "Dibatalkan", variant: "destructive", icon: <XCircle className="w-3 h-3" /> },
-  REFUNDED: { label: "Dikembalikan", variant: "secondary", icon: <ArrowLeft className="w-3 h-3" /> },
-  HELD: { label: "Tertahan", variant: "outline", icon: <Clock className="w-3 h-3" /> },
+  COMPLETED: { ...STATUS_BADGE.COMPLETED, icon: <CheckCircle className="w-3 h-3" /> },
+  VOIDED: { ...STATUS_BADGE.VOIDED, icon: <XCircle className="w-3 h-3" /> },
+  REFUNDED: { ...STATUS_BADGE.REFUNDED, icon: <ArrowLeft className="w-3 h-3" /> },
+  HELD: { ...STATUS_BADGE.HELD, icon: <Clock className="w-3 h-3" /> },
 };
 
 export default function TransactionsPage() {
@@ -217,7 +200,7 @@ export default function TransactionsPage() {
             size="sm"
             onClick={() => setPaymentFilter(method)}
           >
-            {method === "ALL" ? "Semua" : paymentMethodLabel[method] || method}
+            {method === "ALL" ? "Semua" : PAYMENT_METHOD_LABEL[method] || method}
           </Button>
         ))}
       </div>
@@ -273,7 +256,7 @@ export default function TransactionsPage() {
                       <TableCell className="hidden md:table-cell">{order.user.fullName}</TableCell>
                       <TableCell className="hidden md:table-cell">{order.customer?.name || "-"}</TableCell>
                       <TableCell className="hidden sm:table-cell">
-                        <Badge variant="outline">{paymentMethodLabel[order.payments[0]?.method] || "-"}</Badge>
+                        <Badge variant="outline">{PAYMENT_METHOD_LABEL[order.payments[0]?.method] || "-"}</Badge>
                       </TableCell>
                       <TableCell className="text-right font-bold">{formatRupiah(order.total)}</TableCell>
                       <TableCell>
@@ -380,7 +363,7 @@ export default function TransactionsPage() {
                 <h4 className="font-medium mb-1 text-sm">Pembayaran</h4>
                 {selectedOrder.payments.map((payment) => (
                   <div key={payment.id} className="flex justify-between text-sm">
-                    <span>{paymentMethodLabel[payment.method]}</span>
+                    <span>{PAYMENT_METHOD_LABEL[payment.method]}</span>
                     <span className="font-medium">{formatRupiah(payment.amount)}</span>
                   </div>
                 ))}

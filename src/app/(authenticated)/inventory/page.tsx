@@ -46,6 +46,7 @@ import {
 } from "recharts";
 import { StockEditDialog } from "@/components/stock-edit-dialog";
 import { toast } from "sonner";
+import { formatRupiah } from "@/lib/utils";
 
 interface InventoryItem {
   id: string;
@@ -103,14 +104,6 @@ const reasonLabels: Record<string, string> = {
   SALE: "Penjualan",
   OTHER: "Lainnya",
 };
-
-const formatRupiah = (amount: number) =>
-  new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
 
 export default function InventoryPage() {
   const [products, setProducts] = React.useState<Product[]>([]);
@@ -476,13 +469,13 @@ export default function InventoryPage() {
                         outerRadius={100}
                         paddingAngle={5}
                         dataKey="value"
-                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                        label={({ name, percent }) => `${name} (${((percent ?? 0) * 100).toFixed(0)}%)`}
                       >
                         {stockByStore.map((_, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value: number) => value.toLocaleString("id-ID")} />
+                      <Tooltip formatter={(value) => Number(value ?? 0).toLocaleString("id-ID")} />
                       <Legend />
                     </PieChart>
                   </ResponsiveContainer>
@@ -504,7 +497,7 @@ export default function InventoryPage() {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" fontSize={12} />
                       <YAxis fontSize={12} />
-                      <Tooltip formatter={(value: number) => value.toLocaleString("id-ID")} />
+                      <Tooltip formatter={(value) => Number(value ?? 0).toLocaleString("id-ID")} />
                       <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>

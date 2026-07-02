@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import Link from "next/link";
+import { Store, Loader2 } from "lucide-react";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
@@ -66,15 +67,19 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Kasirku</CardTitle>
+    <div className="relative flex min-h-screen items-center justify-center p-4">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+      <Card className="relative w-full max-w-sm shadow-lg">
+        <CardHeader className="items-center pb-2 pt-8">
+          <div className="mb-2 flex size-12 items-center justify-center rounded-xl bg-primary/10">
+            <Store className="size-6 text-primary" />
+          </div>
+          <CardTitle className="text-xl font-semibold tracking-tight">Kasirku</CardTitle>
           <CardDescription>Buat akun baru</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pb-8">
           <form onSubmit={handleRegister} className="space-y-4">
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="fullName">Nama Lengkap</Label>
               <Input
                 id="fullName"
@@ -83,10 +88,11 @@ export default function RegisterPage() {
                 onChange={(e) =>
                   setForm({ ...form, fullName: e.target.value })
                 }
+                autoFocus
                 required
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
@@ -97,7 +103,7 @@ export default function RegisterPage() {
                 required
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="organizationName">Nama Toko (opsional)</Label>
               <Input
                 id="organizationName"
@@ -108,7 +114,7 @@ export default function RegisterPage() {
                 }
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
@@ -122,7 +128,7 @@ export default function RegisterPage() {
                 minLength={6}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
               <Input
                 id="confirmPassword"
@@ -136,12 +142,13 @@ export default function RegisterPage() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
+              {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
               {loading ? "Mendaftar..." : "Daftar"}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm text-muted-foreground">
+          <div className="mt-6 text-center text-xs text-muted-foreground">
             Sudah punya akun?{" "}
-            <Link href="/login" className="text-primary underline">
+            <Link href="/login" className="font-medium text-primary hover:underline">
               Masuk
             </Link>
           </div>

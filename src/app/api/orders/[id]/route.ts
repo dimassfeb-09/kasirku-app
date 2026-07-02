@@ -1,29 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/prisma";
-import { logger } from "@/lib/logger";
-
-const log = logger.child({ module: "orders" });
-
-function serializeOrder(order: any) {
-  return {
-    ...order,
-    subtotal: Number(order.subtotal),
-    taxAmount: Number(order.taxAmount),
-    discountAmount: Number(order.discountAmount),
-    total: Number(order.total),
-    items: order.items.map((item: any) => ({
-      ...item,
-      unitPrice: Number(item.unitPrice),
-      discountAmount: Number(item.discountAmount),
-      total: Number(item.total),
-    })),
-    payments: order.payments.map((p: any) => ({
-      ...p,
-      amount: Number(p.amount),
-    })),
-  };
-}
+import { serializeOrder } from "@/lib/order-utils";
 
 export async function GET(
   request: Request,

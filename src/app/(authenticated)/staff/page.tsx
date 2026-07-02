@@ -30,7 +30,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Search, Plus, Pencil, Trash2, UserCheck, UserX, Store } from "lucide-react";
+import { Search, Plus, Pencil, UserCheck, UserX, Store } from "lucide-react";
 import { toast } from "sonner";
 import { StaffForm } from "@/components/staff-form";
 

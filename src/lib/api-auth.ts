@@ -36,14 +36,4 @@ export function requirePermission(
   return null;
 }
 
-export function canAccessStore(
-  ctx: AuthContext,
-  storeOrganizationId: string
-): boolean {
-  // OWNER can access all stores in their org
-  if (ctx.userRole === "OWNER") {
-    return ctx.session.organizationId === storeOrganizationId;
-  }
-  // Others need UserStore assignment (checked separately)
-  return ctx.session.organizationId === storeOrganizationId;
-}
+
