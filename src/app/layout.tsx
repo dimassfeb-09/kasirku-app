@@ -3,6 +3,7 @@ import { Roboto, Roboto_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
+import { PWARegister } from "@/lib/pwa-register";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +23,15 @@ const robotoMono = Roboto_Mono({
 export const metadata: Metadata = {
   title: "Kasirku - Point of Sale",
   description: "Modern web-based POS application for retail and F&B businesses",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "Kasirku",
+    statusBarStyle: "black-translucent",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export default function RootLayout({
@@ -35,10 +45,17 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${roboto.variable} ${robotoMono.variable} h-full antialiased`}
     >
+      <head>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+      </head>
       <body suppressHydrationWarning className="min-h-full flex flex-col font-sans">
         <ThemeProvider>
           <TooltipProvider>
-            {children}
+            <PWARegister>
+              {children}
+            </PWARegister>
           </TooltipProvider>
           <Toaster />
         </ThemeProvider>
