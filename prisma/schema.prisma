@@ -1,0 +1,315 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── Organization (Tenant) ───────────────────────────────────────────────────
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  logoUrl   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stores   Store[]
+  users    User[]
+  products Product[]
+  customers Customer[]
+
+  @@map("organizations")
+}
+
+// ── Store / Branch ──────────────────────────────────────────────────────────
+
+model Store {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  address        String?
+  phone          String?
+  currency       String   @default("IDR")
+  taxRate        Decimal  @default(0) @db.Decimal(5, 2)
+  receiptHeader  String?
+  receiptFooter  String?
+  businessHours  Json?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  staffAssignments UserStore[]
+  inventory       Inventory[]
+  orders          Order[]
+
+  @@unique([organizationId, name])
+  @@map("stores")
+}
+
+// ── User & Auth ─────────────────────────────────────────────────────────────
+
+model User {
+  id             String   @id @default(cuid())
+  organizationId String
+  email          String   @unique
+  password       String
+  fullName       String
+  role           UserRole @default(CASHIER)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization    Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  storeAssignments UserStore[]
+  orders          Order[]
+  adjustments     InventoryAdjustment[]
+  auditLogs       AuditLog[]
+
+  @@index([organizationId])
+  @@map("users")
+}
+
+enum UserRole {
+  OWNER
+  MANAGER
+  CASHIER
+}
+
+model UserStore {
+  id        String @id @default(cuid())
+  userId    String
+  storeId   String
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, storeId])
+  @@map("user_stores")
+}
+
+// ── Product & Category ──────────────────────────────────────────────────────
+
+model Category {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  parentId       String?
+  createdAt      DateTime @default(now())
+
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+  products Product[]
+
+  @@unique([organizationId, name])
+  @@map("categories")
+}
+
+model Product {
+  id             String   @id @default(cuid())
+  organizationId String
+  categoryId     String?
+  name           String
+  sku            String?
+  barcode        String?
+  description    String?
+  price          Decimal  @db.Decimal(12, 2)
+  cost           Decimal  @default(0) @db.Decimal(12, 2)
+  imageUrl       String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  category     Category?          @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  variants     ProductVariant[]
+  inventory    Inventory[]
+  orderItems   OrderItem[]
+
+  @@index([organizationId])
+  @@index([sku])
+  @@index([barcode])
+  @@map("products")
+}
+
+model ProductVariant {
+  id        String  @id @default(cuid())
+  productId String
+  name      String
+  sku       String?
+  barcode   String?
+  price     Decimal @db.Decimal(12, 2)
+  cost      Decimal @default(0) @db.Decimal(12, 2)
+  isActive  Boolean @default(true)
+
+  product   Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  inventory Inventory[]
+  orderItems OrderItem[]
+
+  @@unique([productId, name])
+  @@map("product_variants")
+}
+
+// ── Inventory ───────────────────────────────────────────────────────────────
+
+model Inventory {
+  id               String  @id @default(cuid())
+  storeId          String
+  productId        String
+  productVariantId String?
+  quantity         Int     @default(0)
+  lowStockThreshold Int    @default(10)
+
+  store          Store           @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  product        Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productVariant ProductVariant? @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+  adjustments    InventoryAdjustment[]
+
+  @@unique([storeId, productId, productVariantId])
+  @@index([storeId, quantity])
+  @@map("inventory")
+}
+
+model InventoryAdjustment {
+  id          String           @id @default(cuid())
+  inventoryId String
+  userId      String
+  quantity    Int
+  reason      AdjustmentReason
+  note        String?
+  createdAt   DateTime         @default(now())
+
+  inventory Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([inventoryId])
+  @@map("inventory_adjustments")
+}
+
+enum AdjustmentReason {
+  RESTOCK
+  DAMAGED
+  CORRECTION
+  RETURN
+  SALE
+  OTHER
+}
+
+// ── Customer ────────────────────────────────────────────────────────────────
+
+model Customer {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  phone          String?
+  email          String?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  orders       Order[]
+
+  @@index([organizationId])
+  @@map("customers")
+}
+
+// ── Order / Transaction ────────────────────────────────────────────────────
+
+model Order {
+  id             String      @id @default(cuid())
+  orderNumber    String      @unique
+  storeId        String
+  customerId     String?
+  userId         String
+  subtotal       Decimal     @db.Decimal(12, 2)
+  taxAmount      Decimal     @default(0) @db.Decimal(12, 2)
+  discountAmount Decimal     @default(0) @db.Decimal(12, 2)
+  total          Decimal     @db.Decimal(12, 2)
+  status         OrderStatus @default(COMPLETED)
+  notes          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  store    Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  customer Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items    OrderItem[]
+  payments Payment[]
+
+  @@index([storeId])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+enum OrderStatus {
+  COMPLETED
+  VOIDED
+  REFUNDED
+  HELD
+}
+
+model OrderItem {
+  id               String  @id @default(cuid())
+  orderId          String
+  productId        String
+  productVariantId String?
+  productName      String
+  quantity         Int
+  unitPrice        Decimal @db.Decimal(12, 2)
+  discountAmount   Decimal @default(0) @db.Decimal(12, 2)
+  total            Decimal @db.Decimal(12, 2)
+
+  order          Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product        Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productVariant ProductVariant? @relation(fields: [productVariantId], references: [id], onDelete: SetNull)
+
+  @@map("order_items")
+}
+
+// ── Payment ─────────────────────────────────────────────────────────────────
+
+model Payment {
+  id        String        @id @default(cuid())
+  orderId   String
+  method    PaymentMethod
+  amount    Decimal       @db.Decimal(12, 2)
+  reference String?
+  createdAt DateTime      @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  EWALLET
+  QRIS
+  TRANSFER
+  OTHER
+}
+
+// ── Audit Log ───────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  entity    String
+  entityId  String?
+  details   Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}

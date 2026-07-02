@@ -1,0 +1,59 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: kasirku-db
+    restart: unless-stopped
+    ports:
+      - "5431:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: kasirku-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@db:5432/postgres?schema=public"
+      JWT_SECRET: "kasirku-dev-secret-key"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - ./prisma:/app/prisma
+      - /app/node_modules
+      - /app/.next
+    command: bun run dev
+
+  seed:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: kasirku-seed
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@db:5432/postgres?schema=public"
+      JWT_SECRET: "kasirku-dev-secret-key"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: bun run db:seed
+    # Run once then exit
+    restart: "no"
+
+volumes:
+  pgdata:

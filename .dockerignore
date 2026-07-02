@@ -1,0 +1,58 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Next.js
+.next
+out
+build
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment (mounted at runtime)
+.env
+.env.local
+.env*.local
+
+# Docs
+README.md
+AGENTS.md
+CLAUDE.md
+*.md
+
+# UI screenshots
+*.png
+
+# TypeScript build info
+*.tsbuildinfo
+next-env.d.ts
+
+# Prisma generated (rebuilt in container)
+src/generated
+
+# Misc
+coverage
+.vercel
