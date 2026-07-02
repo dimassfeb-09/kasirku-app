@@ -19,7 +19,9 @@ export function usePWA() {
 }
 
 export function PWARegister({ children }: { children?: React.ReactNode }) {
-  const [isOnline, setIsOnline] = React.useState(() => navigator.onLine);
+  const [isOnline, setIsOnline] = React.useState(
+    typeof window !== "undefined" ? navigator.onLine : true
+  );
   const [canInstall, setCanInstall] = React.useState(false);
   const deferredPrompt = React.useRef<Event | null>(null);
 
